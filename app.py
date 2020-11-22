@@ -53,6 +53,9 @@ if __name__ == "__main__":
     reddit_config = {k: os.environ[k] for k in ['client_id', 'client_secret', 'password', 'user_agent', 'username']}
     kafka_config = {k: os.environ[k] for k in ['host', 'port', 'topic']}
     subreddit_names = os.environ['subreddits'].split(',')
+    print(f'kafka_config: {kafka_config}')
+    print(f'reddit_config: {reddit_config}')
+    print(f'subreddit_names: {subreddit_names}')
 
     producer = KafkaProducer(bootstrap_servers=f'{kafka_config["host"]}:{kafka_config["port"]}',
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
