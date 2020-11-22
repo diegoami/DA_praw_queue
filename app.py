@@ -2,11 +2,20 @@ import yaml
 import praw
 import threading
 import json
+import os
 from kafka import KafkaProducer
 MAX_SUBMITTED=1000
+from dotenv import load_dotenv
+load_dotenv()
+
+# OR, the same with increased verbosity
+load_dotenv(verbose=True)
+
 
 lock = threading.Lock()
 submitted = []
+
+
 producer = None
 topic = None
 
@@ -39,19 +48,16 @@ def print_submissions(reddit, subreddit_name, process_submission=print_submissio
 
 
 if __name__ == "__main__":
-    auth_config_file = 'auth.yml'
+
     scrape_config_file = 'scrape.yml'
-    with open(auth_config_file) as f:
-        auth_config = yaml.safe_load(f)
-    with open(scrape_config_file) as f:
-        scrape_config = yaml.safe_load(f)
-    kafka_config = scrape_config['kafka']
+    reddit_config = {k: os.environ[k] for k in ['client_id', 'client_secret', 'password', 'user_agent', 'username']}
+    kafka_config = {k: os.environ[k] for k in ['host', 'port', 'topic']}
+    subreddit_names = os.environ['subreddits'].split(',')
+
     producer = KafkaProducer(bootstrap_servers=f'{kafka_config["host"]}:{kafka_config["port"]}',
-                             value_serializer=lambda v: json.dumps(v).encode('utf-8')
-                             )
+                             value_serializer=lambda v: json.dumps(v).encode('utf-8'))
     topic = kafka_config["topic"]
-    reddit = praw.Reddit(**auth_config["reddit_config"])
-    subreddit_names = scrape_config['subreddits']
+    reddit = praw.Reddit(**reddit_config)
     thread_list = []
     for subreddit_name in subreddit_names:
         thread = threading.Thread(target=print_submissions, group=None, args=(reddit, subreddit_name, kafka_submission), daemon=True)
