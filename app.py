@@ -24,11 +24,12 @@ def kafka_submission(subreddit_name, submission):
     global producer
     global topic
     print_submission(subreddit_name, submission)
-    producer.send(topic=topic,
+    metadata = producer.send(topic=topic,
                   value={
                       'subreddit': subreddit_name,
                       'title': submission.title,
                       'url': submission.url})
+    print(metadata)
 
 def print_submission(subreddit_name, submission):
     print(subreddit_name)
@@ -59,15 +60,6 @@ if __name__ == "__main__":
     print(f'subreddit_names: {subreddit_names}')
     time.sleep(5)
 
-    admin_client = KafkaAdminClient(
-        api_version=(2, 6),
-        bootstrap_servers=f'{kafka_config["host"]}:{kafka_config["port"]}',
-        client_id='admin'
-    )
-
-    topic_list = []
-    topic_list.append(NewTopic(name=kafka_config["topic"], num_partitions=1, replication_factor=1))
-    admin_client.create_topics(new_topics=topic_list, validate_only=False)
 
     producer = KafkaProducer(api_version=(2, 6),
                              bootstrap_servers=f'{kafka_config["host"]}:{kafka_config["port"]}',

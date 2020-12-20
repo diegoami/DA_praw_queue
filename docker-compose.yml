@@ -15,8 +15,11 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: kafka
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_PORT: "9092"
+      KAFKA_CREATE_TOPICS: "Techcontroversy:1:1"
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
     hostname: kafka
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   subreddit-queues:
     links:
       - kafka
