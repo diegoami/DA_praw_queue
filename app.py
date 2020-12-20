@@ -1,12 +1,13 @@
-import yaml
 import praw
 import threading
 import json
 import os
 from kafka import KafkaProducer
+from kafka.admin import KafkaAdminClient, NewTopic
 MAX_SUBMITTED=1000
 from dotenv import load_dotenv
 load_dotenv()
+import time
 
 # OR, the same with increased verbosity
 load_dotenv(verbose=True)
@@ -56,8 +57,20 @@ if __name__ == "__main__":
     print(f'kafka_config: {kafka_config}')
     print(f'reddit_config: {reddit_config}')
     print(f'subreddit_names: {subreddit_names}')
+    time.sleep(5)
 
-    producer = KafkaProducer(bootstrap_servers=f'{kafka_config["host"]}:{kafka_config["port"]}',
+    admin_client = KafkaAdminClient(
+        api_version=(2, 6),
+        bootstrap_servers=f'{kafka_config["host"]}:{kafka_config["port"]}',
+        client_id='admin'
+    )
+
+    topic_list = []
+    topic_list.append(NewTopic(name=kafka_config["topic"], num_partitions=1, replication_factor=1))
+    admin_client.create_topics(new_topics=topic_list, validate_only=False)
+
+    producer = KafkaProducer(api_version=(2, 6),
+                             bootstrap_servers=f'{kafka_config["host"]}:{kafka_config["port"]}',
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
     topic = kafka_config["topic"]
     reddit = praw.Reddit(**reddit_config)
